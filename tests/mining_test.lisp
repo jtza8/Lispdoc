@@ -14,27 +14,6 @@
     (assert-equal "Reads minds."
                   (getf (getf *doc-tree* :packages) :foo))))
 
-(def-test-method mine-condition-test ((test miner-test))
-  (let ((*doc-tree* (copy-seq *doc-tree*)))
-    (mine-condition '(define-condition bar (error)
-                      (variable variable)
-                      :documentation "Reads minds."))
-    (assert-equal '(:package :cl-user
-                    :super-types (error)
-                    :documentation "Reads minds.")
-                  (getf (getf *doc-tree* :conditions) :bar))))
-      
-(def-test-method mine-class-test ((test miner-test))
-  (let ((*doc-tree* (copy-seq *doc-tree*)))
-    (mine-class '(defclass bar ()
-                  ((variable-a :initarg "foo")
-                   variable-b)
-                      :documentation "Reads minds."))
-    (assert-equal '(:package :cl-user
-                    :super-types ()
-                    :documentation "Reads minds.")
-                  (getf (getf *doc-tree* :classes) :bar))))
-
 (def-test-method mine-function-test ((test miner-test))
   (let ((*doc-tree* (copy-seq *doc-tree*)))
     (mine-function '(defun function-a (var-1 var-2)
@@ -51,6 +30,25 @@
                     :documentation nil)
                   (getf (getf *doc-tree* :functions) :function-b))))
 
+(def-test-method mine-class-test ((test miner-test))
+  (let ((*doc-tree* (copy-seq *doc-tree*)))
+    (mine-class '(defclass bar ()
+                  ((variable-a :initarg "foo")
+                   variable-b)
+                  (:documentation "Reads minds.")))
+    (assert-equal '(:package :cl-user
+                    :super-types ()
+                    :documentation "Reads minds.")
+                  (getf (getf *doc-tree* :classes) :bar))
+    (mine-class '(define-condition condition (error)
+                  ((variable-a :initarg "foo")
+                   variable-b)
+                  (:documentation "Reads minds.")))
+    (assert-equal '(:package :cl-user
+                    :super-types (error)
+                    :documentation "Reads minds.")
+                  (getf (getf *doc-tree* :conditions) :condition))))
+
 (def-test-method mine-method-test ((test miner-test))
   (let ((*doc-tree* (copy-seq *doc-tree*)))
     (mine-method '(defmethod method-a (foo bar)
@@ -59,6 +57,7 @@
     (assert-equal '(:package :cl-user
                     :method-qualifiers ()
                     :arguments (foo bar)
+                    :setf-method nil
                     :documentation "Reads minds")
                   (getf (getf *doc-tree* :methods) :method-a))
     (mine-method '(defmethod method-b :after (foo bar)
@@ -67,8 +66,18 @@
     (assert-equal '(:package :cl-user
                     :method-qualifiers (:after)
                     :arguments (foo bar)
+                    :setf-method nil
                     :documentation "Reads minds")
-                  (getf (getf *doc-tree* :methods) :method-b))))
+                  (getf (getf *doc-tree* :methods) :method-b))
+    (mine-method '(defmethod (setf method-c) :after (foo bar)
+                   "Reads minds"
+                   (not (null t))))
+    (assert-equal '(:package :cl-user
+                    :method-qualifiers (:after)
+                    :arguments (foo bar)
+                    :setf-method t
+                    :documentation "Reads minds")
+                  (getf (getf *doc-tree* :methods) :method-c))))
 
 (def-test-method mine-generic-test ((test miner-test))
   (let ((*doc-tree* (copy-seq *doc-tree*)))
@@ -78,3 +87,8 @@
                     :arguments (var-1 var-2)
                     :documentation "Reads minds")
                   (getf (getf *doc-tree* :generic-functions) :generic))))
+
+(def-test-method test-parse-doc-tree ((test miner-test))
+  (print (parse-doc-tree (list (asdf:system-relative-pathname
+                                :lispdoc
+                                "tests/subjects/subject_01.lisp")))))

@@ -23,25 +23,20 @@
   (push (getf sexp :documentation) (getf tree :packages))
   (push (keywordise (cadr sexp)) (getf tree :packages)))
 
-(defun mine-condition (sexp &optional
-                       (tree *doc-tree*)
-                       (package *current-package*))
-  (assert (eq (car sexp) 'define-condition))
-  (push (list :package *current-package*
-              :super-types (third sexp)
-              :documentation (getf (cddddr sexp) :documentation))
-        (getf tree :conditions))
-  (push (keywordise (second sexp)) (getf tree :conditions)))
-
 (defun mine-class (sexp &optional
                    (tree *doc-tree*)
                    (package *current-package*))
-  (assert (eq (car sexp) 'defclass))
-  (push (list :package *current-package*
-              :super-types (third sexp)
-              :documentation (getf (cddddr sexp) :documentation))
-        (getf tree :classes))
-  (push (keywordise (second sexp)) (getf tree :classes)))
+  (let ((type-key (ecase (car sexp)
+                    ((defclass) :classes)
+                    ((define-condition) :conditions))))
+    (push (list :package package
+                :super-types (third sexp)
+                :documentation (second (find-if 
+                                        (lambda (item)
+                                          (eq (first item) :documentation))
+                                        (cddddr sexp))))
+          (getf tree type-key))
+  (push (keywordise (second sexp)) (getf tree type-key))))
 
 (defun mine-function (sexp &optional
                       (tree *doc-tree*)
@@ -69,23 +64,28 @@
                     (tree *doc-tree*) 
                     (package *current-package*))
   (assert (eq (car sexp) 'defmethod))
-  (let ((pointer (cddr sexp)))
+  (let ((pointer (cddr sexp))
+        (method-name (second sexp)))
     (push (list :package *current-package*
                 :method-qualifiers (loop until (consp (car pointer))
                                       collect (car pointer) do
                                         (setf pointer (cdr pointer)))
                 :arguments (pop pointer)
+                :setf-method (and (consp method-name) 
+                                  (eq (first method-name) 'setf))
                 :documentation (if (stringp (car pointer))
                                  (pop pointer)
                                  nil))
         (getf tree :methods))
-  (push (keywordise (second sexp)) (getf tree :methods))))
+  (push (keywordise (if (consp method-name)
+                        (second method-name)
+                        method-name))
+        (getf tree :methods))))
 
 (defun parse-sexp (sexp)
   (case (car sexp)
     ((defpackage) (mine-package sexp))
-    ((define-condition) (mine-condition sexp))
-    ((defclass) (mine-class sexp))
+    ((defclass define-condition) (mine-class sexp))
     ((defun) (mine-function sexp))
     ((defgeneric) (mine-generic sexp))
     ((defmethod) (mine-method sexp))
@@ -96,5 +96,5 @@
         (*current-package* *current-package*))
     (dolist (file-name file-list *doc-tree*)
       (handler-case (with-open-file (input file-name :if-does-not-exist :error)
-                      (loop (parse-sexp (print (read input)))))
+                      (loop (parse-sexp (read input))))
         (end-of-file () ())))))
