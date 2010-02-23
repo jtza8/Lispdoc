@@ -24,9 +24,9 @@
   (push (getf sexp :documentation) (getf tree :packages))
   (push (keywordise (cadr sexp)) (getf tree :packages)))
 
-(defun mine-class (sexp &optional
-                   (tree *doc-tree*)
-                   (package *current-package*))
+(defun mine-class-or-condition (sexp &optional
+				(tree *doc-tree*)
+				(package *current-package*))
   (let ((type-key (ecase (car sexp)
                     ((defclass) :classes)
                     ((define-condition) :conditions))))
@@ -89,7 +89,7 @@
 (defun parse-sexp (sexp)
   (case (car sexp)
     ((defpackage) (mine-package sexp))
-    ((defclass define-condition) (mine-class sexp))
+    ((defclass define-condition) (mine-class-or-condition sexp))
     ((defun defmacro) (mine-macro-or-function sexp))
     ((defgeneric) (mine-generic sexp))
     ((defmethod) (mine-method sexp))
