@@ -14,21 +14,28 @@
     (assert-equal "Reads minds."
                   (getf (getf *doc-tree* :packages) :foo))))
 
-(def-test-method mine-function-test ((test miner-test))
+(def-test-method mine-macro-or-function-test ((test miner-test))
   (let ((*doc-tree* (copy-seq *doc-tree*)))
-    (mine-function '(defun function-a (var-1 var-2)
-                       "Reads minds"
-                     (not (null t))))
+    (mine-macro-or-function '(defun function-a (var-1 var-2)
+			      "Reads minds"
+			      (not (null t))))
     (assert-equal '(:package :cl-user
                     :arguments (var-1 var-2)
                     :documentation "Reads minds")
                   (getf (getf *doc-tree* :functions) :function-a))
-    (mine-function '(defun function-b (var-1 var-2)
-                     (not (null t))))
+    (mine-macro-or-function '(defun function-b (var-1 var-2)
+			      (not (null t))))
     (assert-equal '(:package :cl-user
                     :arguments (var-1 var-2)
                     :documentation nil)
-                  (getf (getf *doc-tree* :functions) :function-b))))
+                  (getf (getf *doc-tree* :functions) :function-b))
+    (mine-macro-or-function '(defmacro macro-a (var-1 var-2)
+			      "Reads minds"
+			      (not (null t))))
+    (assert-equal '(:package :cl-user
+                    :arguments (var-1 var-2)
+                    :documentation "Reads minds")
+                  (getf (getf *doc-tree* :macros) :macro-a))))
 
 (def-test-method mine-class-test ((test miner-test))
   (let ((*doc-tree* (copy-seq *doc-tree*)))

@@ -8,6 +8,7 @@
 (defparameter *doc-tree* '(:packages ()
                            :conditions ()
                            :classes ()
+			   :macros ()
                            :functions ()
                            :generic-functions ()
                            :methods ()))
@@ -38,23 +39,26 @@
           (getf tree type-key))
   (push (keywordise (second sexp)) (getf tree type-key))))
 
-(defun mine-function (sexp &optional
-                      (tree *doc-tree*)
-                      (package *current-package*))
-  (assert (eq (car sexp) 'defun))
-  (push (list :package *current-package*
-              :arguments (third sexp)
-              :documentation (if (stringp (fourth sexp))
-                                 (fourth sexp)
-                                 nil))
-        (getf tree :functions))
-  (push (keywordise (second sexp)) (getf tree :functions)))
+(defun mine-macro-or-function (sexp &optional
+			       (tree *doc-tree*)
+			       (package *current-package*))
+  (ecase (car sexp) ((defun defmacro) t))
+  (let ((type-key (ecase (car sexp) 
+		    ((defun) :functions)
+		    ((defmacro) :macros))))
+    (push (list :package package
+		:arguments (third sexp)
+		:documentation (if (stringp (fourth sexp))
+				   (fourth sexp)
+				   nil))
+	  (getf tree type-key))
+    (push (keywordise (second sexp)) (getf tree type-key))))
 
 (defun mine-generic (sexp &optional 
                      (tree *doc-tree*)
                      (package *current-package*))
   (assert (eq (car sexp) 'defgeneric))
-  (push (list :package *current-package*
+  (push (list :package package
               :arguments (third sexp)
               :documentation (getf (cdddr sexp) :documentation))
         (getf tree :generic-functions))
@@ -66,7 +70,7 @@
   (assert (eq (car sexp) 'defmethod))
   (let ((pointer (cddr sexp))
         (method-name (second sexp)))
-    (push (list :package *current-package*
+    (push (list :package package
                 :method-qualifiers (loop until (consp (car pointer))
                                       collect (car pointer) do
                                         (setf pointer (cdr pointer)))
@@ -86,7 +90,7 @@
   (case (car sexp)
     ((defpackage) (mine-package sexp))
     ((defclass define-condition) (mine-class sexp))
-    ((defun) (mine-function sexp))
+    ((defun defmacro) (mine-macro-or-function sexp))
     ((defgeneric) (mine-generic sexp))
     ((defmethod) (mine-method sexp))
     ((in-package) (setf *current-package* (keywordise (second sexp))))))
