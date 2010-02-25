@@ -3,6 +3,6 @@
   :author "Jens Thiede"
   :licence "BSD-Style Licence"
   :version "0.1"
-;  :depends-on ""
   :components ((:file "package")
-               (:file "mining" :depends-on ("package"))))
+               (:file "mining" :depends-on ("package"))
+	       (:file "generation" :depends-on ("mining"))))

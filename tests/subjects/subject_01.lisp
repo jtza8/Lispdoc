@@ -40,7 +40,7 @@
   (push (keywordise (cadr sexp)) (getf tree :packages)))
 
 
-(defgeneric blah (one two) :documentation "Generic Function.")
+(defgeneric blah (one two) (:documentation "Generic Function."))
 
 (defmethod event-title-bar-drag ((window window) event)
   "Method documentation."

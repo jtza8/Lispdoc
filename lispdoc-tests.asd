@@ -6,4 +6,6 @@
   :components ((:module "tests"
                 :components ((:file "test_package")
                              (:file "mining_test"
-                              :depends-on ("test_package"))))))
+                              :depends-on ("test_package"))
+			     (:file "generation_test" 
+			      :depends-on ("test_package"))))))

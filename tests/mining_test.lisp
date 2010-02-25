@@ -118,6 +118,6 @@
                   (getf (getf *doc-tree* :generic-functions) :generic))))
 
 (def-test-method test-parse-doc-tree ((test miner-test))
-  (print (parse-doc-tree (list (asdf:system-relative-pathname
-                                :lispdoc
-                                "tests/subjects/subject_01.lisp")))))
+  (parse-doc-tree (list (asdf:system-relative-pathname
+			 :lispdoc
+			 #P"tests/subjects/subject_01.lisp"))))
