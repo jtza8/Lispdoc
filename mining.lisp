@@ -17,27 +17,41 @@
 (defun keywordise (symbol)
   (intern (symbol-name symbol) :keyword))
 
+(defun convert-options (options &key (atomic-keys nil) (ignore nil))
+  (loop for option in options
+     unless (find (first option) ignore)
+       collect (first option) and
+       unless (find (first option) atomic-keys) collect (rest option)
+       else collect (second option)))
+
 (defun mine-package (sexp &optional
-                     (tree *doc-tree*)
-                     (package *current-package*))
+                     (tree *doc-tree*))
   (assert (eq (car sexp) 'defpackage))
-  (push (getf sexp :documentation) (getf tree :packages))
+  (push (convert-options (cddr sexp)
+			 :atomic-keys '(:documentation :size))
+	(getf tree :packages))
   (push (keywordise (cadr sexp)) (getf tree :packages)))
 
 (defun mine-class-or-condition (sexp &optional
 				(tree *doc-tree*)
 				(package *current-package*))
-  (let ((type-key (ecase (car sexp)
-                    ((defclass) :classes)
-                    ((define-condition) :conditions))))
-    (push (list :package package
-                :super-types (third sexp)
-                :documentation (second (find-if 
-                                        (lambda (item)
-                                          (eq (first item) :documentation))
-                                        (cddddr sexp))))
-          (getf tree type-key))
-  (push (keywordise (second sexp)) (getf tree type-key))))
+  (let* ((type-key (ecase (car sexp)
+		     ((defclass) :classes)
+		     ((define-condition) :conditions)))
+	 (options (cddddr sexp))
+	 (default-init-args (cdr (find-if (lambda (x) (eq (first x) :default-init-args))
+					  options))))
+    (push (append (list :package package
+			:super-types (third sexp))
+		  (when default-init-args
+		    (list :default-init-args default-init-args))
+		  (convert-options options 
+				   :atomic-keys '(:documentation
+						  :metaclass
+						  :report)
+				   :ignore '(:default-init-args)))
+	  (getf tree type-key))
+    (push (keywordise (second sexp)) (getf tree type-key))))
 
 (defun mine-macro-or-function (sexp &optional
 			       (tree *doc-tree*)
@@ -58,11 +72,12 @@
                      (tree *doc-tree*)
                      (package *current-package*))
   (assert (eq (car sexp) 'defgeneric))
-  (push (list :package package
-              :arguments (third sexp)
-              :documentation (getf (cdddr sexp) :documentation))
-        (getf tree :generic-functions))
-  (push (keywordise (second sexp)) (getf tree :generic-functions)))
+  (let ((options (cdddr sexp)))
+    (push (append (list :package package
+			:arguments (third sexp))
+		  (convert-options options :atomic-keys '(:documentation)))
+	  (getf tree :generic-functions))
+    (push (keywordise (second sexp)) (getf tree :generic-functions))))
 
 (defun mine-method (sexp &optional 
                     (tree *doc-tree*) 
