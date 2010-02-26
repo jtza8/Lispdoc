@@ -6,7 +6,7 @@
 (in-package :lispdoc)
 
 (defun generate-package (package-name info)
-  (format nil "# ~a
+  (format nil "# ~a (~[~a ~])
 
 Uses: ~[~a~]
 Exports: ~[~a~]
