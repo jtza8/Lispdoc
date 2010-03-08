@@ -5,13 +5,13 @@
 
 (in-package :lispdoc)
 
-(defun generate-package (package-name info)
-  (format nil "# ~a (~[~a ~])
+;; (defun generate-package (package-name info)
+;;   (format nil "# ~a (~[~a ~])
 
-Uses: ~[~a~]
-Exports: ~[~a~]
-Shadows: ~[~a~]"
-	  package-name
-	  (getf info :use)
-	  (getf info :export)
-	  (getf info :shadow)))
+;; Uses: ~[~a~]
+;; Exports: ~[~a~]
+;; Shadows: ~[~a~]"
+;; 	  package-name
+;; 	  (getf info :use)
+;; 	  (getf info :export)
+;; 	  (getf info :shadow)))

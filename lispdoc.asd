@@ -4,5 +4,5 @@
   :licence "BSD-Style Licence"
   :version "0.1"
   :components ((:file "package")
-               (:file "mining" :depends-on ("package"))
-	       (:file "generation" :depends-on ("mining"))))
+               (:file "doc_tree" :depends-on ("package"))
+	       (:file "generation" :depends-on ("doc_tree"))))
