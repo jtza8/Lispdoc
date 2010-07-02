@@ -95,8 +95,8 @@
                     (unless (null arguments)
                       (list (cons :arguments arguments)))
                     (list (list :setf-method 
-                              (and (consp method-name) 
-                                   (eq (first method-name) 'setf))))
+                                (and (consp method-name) 
+                                     (eq (first method-name) 'setf))))
                     (when (stringp documentation)
                       (list (list :documentation documentation))))
             methods))))

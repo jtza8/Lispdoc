@@ -4,4 +4,5 @@
 ; in the root directory of this project.
 
 (defpackage :lispdoc
-  (:use :common-lisp))
+  (:use :common-lisp)
+  (:export :parse-doc-tree :classes :packages))
