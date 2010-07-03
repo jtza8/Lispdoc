@@ -5,4 +5,4 @@
   :version "0.1"
   :components ((:file "package")
                (:file "doc_tree" :depends-on ("package"))
-	       (:file "generation" :depends-on ("doc_tree"))))
+	       (:file "generator" :depends-on ("doc_tree"))))

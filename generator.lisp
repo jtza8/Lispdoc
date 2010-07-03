@@ -5,8 +5,5 @@
 
 (in-package :lispdoc)
 
-(defclass generation-test (test-case)
-  ())
-
-(def-test-method test-generate-package-doc ((test generation-test))
+(defclass generator ()
   ())
