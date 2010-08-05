@@ -6,4 +6,11 @@
 (in-package :lispdoc)
 
 (defclass generator ()
-  ())
+  ((doc-tree :initform (error "No doc-tree specified.")
+             :initarg :doc-tree)
+   (templates-path :initform (error "No templates-path specified."))
+   (output-path :initform (error "No output-path specified.")
+                :initarg :output-path)
+;;    (source-paths :initform (error "No source-paths specified.")
+;;                  :initarg :source-paths)
+   ))
